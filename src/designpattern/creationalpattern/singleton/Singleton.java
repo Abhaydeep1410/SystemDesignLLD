@@ -15,7 +15,7 @@ class JudgeAnalytics{
 
 //lazy loading ( object is initialized when called)
 class JudgeAnalytics{
-    private static JudgeAnalytics judgeAnalytics;
+    private static volatile JudgeAnalytics judgeAnalytics;
 
     private JudgeAnalytics(){}
 
@@ -35,7 +35,7 @@ class JudgeAnalytics{
         return judgeAnalytics;
     }*/
 
-    public static JudgeAnalytics getInstance(){
+    /*public static JudgeAnalytics getInstance(){
         if(judgeAnalytics == null){
             synchronized(JudgeAnalytics.class){
                 if(judgeAnalytics == null){
@@ -45,13 +45,23 @@ class JudgeAnalytics{
             return judgeAnalytics;
         }
         return judgeAnalytics;
+    }*/
+
+    // Bill Pugh Singleton  (Best and thread safe)
+    // this inner static class is not loaded earger , whenever use the class it get loaded
+    public static class Holder {
+        public static final JudgeAnalytics instance = new JudgeAnalytics();
     }
+    public static JudgeAnalytics getInstance(){
+        return Holder.instance;
+    }
+
 
 }
 
 
 public class Singleton {
-    public static void main(String[] args) {
+    public static void main(String[] args)  {
 
         JudgeAnalytics judgeAnalytics = JudgeAnalytics.getInstance();
         JudgeAnalytics judgeAnalytics2 = JudgeAnalytics.getInstance();

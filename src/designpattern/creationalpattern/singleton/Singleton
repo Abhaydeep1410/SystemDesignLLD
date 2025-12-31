@@ -1,0 +1,146 @@
+package designpattern.creationalpattern;
+
+// eager loading (object is initialized at class loading whether useful or not)
+// thread safe as Object is static and initialized at start
+/*
+class JudgeAnalytics{
+    private static final JudgeAnalytics judgeAnalytics=new JudgeAnalytics();
+
+    private JudgeAnalytics(){}
+    public static JudgeAnalytics getJudgeAnalytics(){
+        return judgeAnalytics;
+    }
+}
+*/
+
+//lazy loading ( object is initialized when called)
+class JudgeAnalytics{
+    private static volatile JudgeAnalytics judgeAnalytics;
+
+    private JudgeAnalytics(){}
+
+    //not thread safe
+    /*public static JudgeAnalytics getJudgeAnalytics(){
+        if (judgeAnalytics == null){
+            judgeAnalytics=new JudgeAnalytics();
+        }
+        return judgeAnalytics;
+    }*/
+
+    // it will check for synchronization even when object created , again and again
+   /* public static synchronized JudgeAnalytics getInstance(){
+        if(judgeAnalytics == null){
+            judgeAnalytics=new JudgeAnalytics();
+        }
+        return judgeAnalytics;
+    }*/
+
+    /*public static JudgeAnalytics getInstance(){
+        if(judgeAnalytics == null){
+            synchronized(JudgeAnalytics.class){
+                if(judgeAnalytics == null){
+                    judgeAnalytics=new JudgeAnalytics();
+                }
+            }
+            return judgeAnalytics;
+        }
+        return judgeAnalytics;
+    }*/
+
+    // Bill Pugh Singleton  (Best and thread safe)
+    // this inner static class is not loaded earger , whenever use the class it get loaded
+    public static class Holder {
+        public static final JudgeAnalytics instance = new JudgeAnalytics();
+    }
+    public static JudgeAnalytics getInstance(){
+        return Holder.instance;
+    }
+
+
+}
+
+
+public class Singleton {
+    public static void main(String[] args)  {
+
+        JudgeAnalytics judgeAnalytics = JudgeAnalytics.getInstance();
+        JudgeAnalytics judgeAnalytics2 = JudgeAnalytics.getInstance();
+        System.out.println(judgeAnalytics);
+        System.out.println(judgeAnalytics2);
+
+    }
+}
+
+🔴 Ways to BREAK Singleton Pattern
+________________________________________
+1️⃣ Break using Reflection (MOST COMMON)
+❌ Problem
+Private constructor can be accessed via reflection.
+Example
+Constructor<JudgeAnalytics> constructor =
+        JudgeAnalytics.class.getDeclaredConstructor();
+constructor.setAccessible(true);
+
+JudgeAnalytics obj1 = JudgeAnalytics.getInstance();
+JudgeAnalytics obj2 = constructor.newInstance();
+
+System.out.println(obj1 == obj2); // false ❌
+🔥 Singleton is broken
+Two different objects created.
+________________________________________
+✅ Fix: Protect constructor
+private JudgeAnalytics() {
+    if (Holder.instance != null) {
+        throw new RuntimeException("Use getInstance()");
+    }
+}
+________________________________________
+2️⃣ Break using Serialization
+❌ Problem
+During deserialization, JVM creates a new object.
+ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("file"));
+oos.writeObject(instance);
+
+ObjectInputStream ois = new ObjectInputStream(new FileInputStream("file"));
+JudgeAnalytics obj2 = (JudgeAnalytics) ois.readObject();
+❌ New instance created.
+________________________________________
+✅ Fix: readResolve()
+protected Object readResolve() {
+    return getInstance();
+}
+This forces JVM to return the same instance.
+________________________________________
+3️⃣ Break using Cloning
+❌ Problem
+If class implements Cloneable, clone creates new object.
+JudgeAnalytics clone = (JudgeAnalytics) instance.clone();
+________________________________________
+✅ Fix: Block cloning
+@Override
+protected Object clone() throws CloneNotSupportedException {
+    throw new CloneNotSupportedException();
+}
+________________________________________
+4️⃣ Break using Multithreading (bad lazy init)
+❌ Problem
+if (instance == null) {
+    instance = new JudgeAnalytics();
+}
+Two threads can enter at same time.
+________________________________________
+✅ Fix
+•	synchronized
+•	volatile + double checked locking
+•	Bill Pugh
+•	Enum Singleton
+✅ Enum Singleton (BEST & SAFEST)  but eager
+🔹 Code
+enum JudgeAnalytics {
+    INSTANCE;
+
+    public void analyze() {
+        System.out.println("Analyzing judges data...");
+    }
+}
+
